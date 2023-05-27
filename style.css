@@ -1,0 +1,134 @@
+/* body:before {
+  content: "";
+    display: block;
+    position: absolute;
+    height: 100%;
+    border: 1px solid red;
+    left: 50%;
+} */
+
+canvas {
+  display: block;
+}
+
+#coins {
+  /* margin-top: 20px; */
+  background: url(./stars-bg.bb100d663537a5c9c7d6.svg) 50%/contain #0e0e16;
+}
+
+#coins-inner {
+  width: 100%;
+  height: 750px;
+  /* transform-origin: 0px 0px;
+  transform: scale(1) translate(0px, 0px);
+  transform-origin: center; */
+}
+.coin {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: tomato;
+  border-radius: 100%;
+  cursor: pointer;
+  transform: scale(1);
+  text-align: center;
+  background: rgb(20 67 101 / 50%);
+  border: 1px solid #1e81c8;
+}
+
+@media (max-width: 800px) {
+  .coin {
+    width: 40px;
+    height: 40px;
+  }
+}
+
+@media (max-width: 520px) {
+  .coin {
+    width: 30px;
+    height: 30px;
+  }
+}
+
+.coin::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  transform: scale(0.7);
+}
+
+.has-active .coin {
+  opacity: 0.3;
+}
+
+.has-active .coin.active,
+.has-active .coin:hover {
+  opacity: 1;
+  filter: drop-shadow(0 0 10px #558ed1);
+}
+
+
+* {
+  padding: 0;
+  margin: 0;
+  outline: 0;
+  overflow: visible;
+}
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+
+
+#el0:before {background-image: url(./icons/Stride40.png);}
+#el1:before {background-image: url(./icons/Persistance40.svg);}
+#el2:before {background-image: url(./icons/Secret40.svg);}
+#el3:before {background-image: url(./icons/Stargaze40-2.png);}
+#el4:before {background-image: url(./icons/Sommelier40.png);}
+#el5:before {background-image: url(./icons/Umee40.png);}
+#el6:before {background-image: url(./icons/Agoric40.png);}
+#el7:before {background-image: url(./icons/Akash40.svg);}
+#el8:before {background-image: url(./icons/Axelar40.png);}
+#el9:before {background-image: url(./icons/Canto40.png);}
+#el8:before {background-image: url(./icons/Comdex40.png);}
+#el10:before {background-image: url(./icons/Cosmos40.svg);}
+#el11:before {background-image: url(./icons/Crescent40.png);}
+#el12:before {background-image: url(./icons/Cronos40.png);}
+#el13:before {background-image: url(./icons/Crypto40.svg);}
+#el14:before {background-image: url(./icons/Evmos40-2.png);}
+#el15:before {background-image: url(./icons/Injective40.svg);}
+#el16:before {background-image: url(./icons/IRIS40.svg);}
+#el17:before {background-image: url(./icons/Juno2-40.svg);}
+#el18:before {background-image: url(./icons/Kujira40.png);}
+#el19:before {background-image: url(./icons/Osmosis40.svg);}
+#el20:before {background-image: url(./icons/Injective40.svg);}
+#el21:before {background-image: url(./icons/Crescent40.png);}
+#el22:before {background-image: url(./icons/Cronos40.png);}
+#el23:before {background-image: url(./icons/Crypto40.svg);}
+#el24:before {background-image: url(./icons/Evmos40-2.png);}
+#el25:before {background-image: url(./icons/Injective40.svg);}
+#el26:before {background-image: url(./icons/IRIS40.svg);}
+#el27:before {background-image: url(./icons/Juno2-40.svg);}
+#el28:before {background-image: url(./icons/Kujira40.png);}
+#el29:before {background-image: url(./icons/Osmosis40.svg);}
+#el30:before {background-image: url(./icons/Injective40.svg);}
+#el31:before {background-image: url(./icons/Crescent40.png);}
+#el32:before {background-image: url(./icons/Cronos40.png);}
+#el33:before {background-image: url(./icons/Crypto40.svg);}
+#el34:before {background-image: url(./icons/Evmos40-2.png);}
+#el35:before {background-image: url(./icons/Injective40.svg);}
+#el36:before {background-image: url(./icons/IRIS40.svg);}
+#el37:before {background-image: url(./icons/Juno2-40.svg);}
+#el38:before {background-image: url(./icons/Kujira40.png);}
+#el39:before {background-image: url(./icons/Osmosis40.svg);}
+#el40:before {background-image: url(./icons/Crescent40.png);}
