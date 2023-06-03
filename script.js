@@ -1,20 +1,4 @@
 
-const coins = document.getElementById('coins');
-const coinsInner = document.getElementById('coins-inner');
-const canvas = document.getElementById('canvas');
-const context = canvas.getContext('2d')
-let width = canvas.width = innerWidth
-let height = canvas.height = coinsInner.clientHeight;
-
-const elements = {}
-const num = 25;
-let size = 50;
-let current = null;
-let centerX = Math.round(document.documentElement.clientWidth / 2 - 25);
-let centerY = 350;
-
-console.log(document.documentElement.clientWidth / 2);
-
 const connects = {
   "el10": ["el17", "el13", "el9", "el21", "el22", "el19", "el23", "el24"],
   "el11": ["el19", "el8", "el18", "el22", "el24", "el0", "el14", "el16", "el21", "el22"],
@@ -43,14 +27,72 @@ const connects = {
   "el20": ["el2", "el18", "el12", "el23", "el22", "el23"]
 }
 
-/*------------------------------------*/
+function newEl(props={}, parent) {
+  el=document.createElement(props.tagName||'div');
+  if (props.css) for (let prop in props.css) {
+    el.style.setProperty(prop, props.css[prop])
+  }
+  delete props.css;
+  Object.assign(el, props);
+  if (parent) parent.append(el);
+  return el;
+}
+const coins = document.getElementById('coins');
+
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+
+coins.append(canvas);
+const orbits = [];
+
+let width, height;
+
+const elements = {}
+let size = 50;
+let current = null;
+let centerX = Math.round(document.documentElement.clientWidth / 2 - 25);
+let centerY = 350;
+
+console.log(document.documentElement.clientWidth / 2);
+
+const connectsArray = Object.entries(connects),
+  num = connectsArray.length; //25;
+const maxCards = [8, 20, 30];
+
+let max=0;
+for(let i=0; i<3; i++) {
+
+  orbits[i] = newEl({className: 'orbit orbit'+i}, coins);
+
+  if ((max+=maxCards[i])>=num) break;
+}
+
+for(let orb=0, start=0; orb<orbits.length; orb++) {
+
+  const count = Math.round(num/max*maxCards[orb])
+    end = start + count;
+
+  orbits[orb].style.setProperty('--n', count);
+
+  for (let i=start; i<end; i++) {
+    const elData = connectsArray[i];
+    newEl({
+      id: elData[0],
+      css: {'--i': i-start}
+    }, orbits[orb]);
+  }
+  start = end
+}
+
+
+/*------------------------------------
 
 const calculateCoordinate = (count, r, cx, cy) => {
   const sectors = [];
+  const maxCardFirst = 8;
+  const maxCardSecond = 20;
   let startAngle = -90;
   let endXAngle = 0;
-  let maxCardFirst = 8;
-  let maxCardSecond = 20;
   let coefFirst = 2;
   let coefFSecond = 1.2;
   let coefFThird = 1.9;
@@ -107,7 +149,7 @@ const calculateCoordinate = (count, r, cx, cy) => {
 };
 
 
-/*------------------------------------*/
+/*------------------------------------
 
 
 
@@ -143,7 +185,7 @@ for (let i = num - 1; i >= 0; i--) {
 // соединяем линиями
 connect(elements)
 
-/*------------------------------------*/
+/*------------------------------------
 var isActive = false;
 var canSetActive = true;
 var activeId = null;
@@ -408,14 +450,14 @@ function onMouseOut(e) {
 }
 
 
-/*------------------------------------*/
+/*------------------------------------
 
 function translate(el, x, y, func) {
   el.style.transform = `translate(${x}px, ${y}px)`
 }
 
 function connect(elements) {
-  context.clearRect(0, 0, width, height);
+  ctx.clearRect(0, 0, width, height);
   var color = "#aeaeae";
 
   for (var key in connects) {
@@ -444,20 +486,20 @@ function connect(elements) {
 }
 
 function drawLine(x1, x2, y1, y2, color) {
-  context.beginPath()
+  ctx.beginPath()
   // из центра квадрата
-  context.moveTo(x1 + size / 2, y1 + size / 2)
-  context.strokeStyle = color;
+  ctx.moveTo(x1 + size / 2, y1 + size / 2)
+  ctx.strokeStyle = color;
 
-  // var gradient = context.createLinearGradient(x2 + size / 2, 0, y2 + size / 2, 0);
+  // var gradient = ctx.createLinearGradient(x2 + size / 2, 0, y2 + size / 2, 0);
   // gradient.addColorStop(0, '#8f8f8f');
   // gradient.addColorStop(.5, '#464646');
   // gradient.addColorStop(1, '#6f6f6f');
-  // context.strokeStyle = gradient;
+  // ctx.strokeStyle = gradient;
   // в центр другого квадрата
-  context.lineTo(x2 + size / 2, y2 + size / 2)
-  context.closePath()
-  context.stroke()
+  ctx.lineTo(x2 + size / 2, y2 + size / 2)
+  ctx.closePath()
+  ctx.stroke()
 }
 
 /*------------------------------------*/

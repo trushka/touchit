@@ -14,19 +14,19 @@ canvas {
 #coins {
   /* margin-top: 20px; */
   background: url(./stars-bg.bb100d663537a5c9c7d6.svg) 50%/contain #0e0e16;
+  height: 750px;
+  position: relative;
 }
 
-#coins-inner {
-  width: 100%;
-  height: 750px;
-  /* transform-origin: 0px 0px;
-  transform: scale(1) translate(0px, 0px);
-  transform-origin: center; */
+.orbit {
+  position: relative;
 }
 .coin {
+  font-size: 50px;
   position: absolute;
-  width: 50px;
-  height: 50px;
+  width: 1em;
+  height: 1em;
+  margin: -.5em;
   background-color: tomato;
   border-radius: 100%;
   cursor: pointer;
@@ -38,15 +38,13 @@ canvas {
 
 @media (max-width: 800px) {
   .coin {
-    width: 40px;
-    height: 40px;
+    --size: 40px;
   }
 }
 
 @media (max-width: 520px) {
   .coin {
-    width: 30px;
-    height: 30px;
+    --size: 30px;
   }
 }
 
