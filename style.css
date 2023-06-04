@@ -1,113 +1,113 @@
 /* body:before {
-  content: "";
-    display: block;
-    position: absolute;
-    height: 100%;
-    border: 1px solid red;
-    left: 50%;
+	content: "";
+		display: block;
+		position: absolute;
+		height: 100%;
+		border: 1px solid red;
+		left: 50%;
 } */
 
 canvas {
-  display: block;
+	display: block;
 }
 
 #coins {
-  /* margin-top: 20px; */
-  background: url(./stars-bg.bb100d663537a5c9c7d6.svg) 50%/contain #0e0e16;
-  height: 750px;
-  position: relative;
+	/* margin-top: 20px; */
+	background: url(./stars-bg.bb100d663537a5c9c7d6.svg) 50%/contain #0e0e16;
+	height: 750px;
+	position: relative;
 }
 
 .orbit {
-  position: absolute;
-  font-size: 50px;
-  left: 50%;
-  top: 50%;
-  --r: 2em;
-  --dur: .2s;
+	position: absolute;
+	font-size: 50px;
+	left: 50%;
+	top: 50%;
+	--r: 2em;
+	--dur: .2s;
 }
 .orbit1 {
-  --r: 4.8em;
-  --dur: .3s;
+	--r: 4.8em;
+	--dur: .3s;
 }
 .orbit2 {
-  --r: 7.6em;
-  --dur: .4s;
+	--r: 7.6em;
+	--dur: .4s;
 }
 @media (max-width: 800px) {
-  .orbit {
-    font-size: 40px;
-  }
+	.orbit {
+		font-size: 40px;
+	}
 }
 
 @media (max-width: 520px) {
-  .orbit {
-    font-size: 30px;
-  }
+	.orbit {
+		font-size: 30px;
+	}
 }
 
 .orbit .coin {
-  position: absolute;
-  cursor: pointer;
-  --ro: calc(var(--i) / var(--n) * 1turn);
-  transform: rotate(var(--ro)) translateY(var(--r)) rotate(calc(-1 * var(--ro)));
-  transition: transform var(--dur);
+	position: absolute;
+	cursor: pointer;
+	--ro: calc(var(--i) / var(--n) * 1turn);
+	transform: rotate(var(--ro)) translateY(var(--r)) rotate(calc(-1 * var(--ro)));
+	transition: transform var(--dur);
 }
 .orbit.selected .coin {
-  --ro: calc(var(--i) / (var(--n) - 1) * 1turn);
+	--ro: calc(var(--i) / (var(--n) - 1) * 1turn);
 }
 .coin.selected ~ .coin {
-  --ro: calc((var(--i) - 1) / (var(--n) - 1) * 1turn);
+	--ro: calc((var(--i) - 1) / (var(--n) - 1) * 1turn);
 }
 .orbit.selected .coin.selected {
-  --r: 0;
+	--r: 0;
 }
 
 .coin::before, .coin::after {
-  position: absolute;
-  content: '';
-  width: 1em;
-  height: 1em;
-  transform: translate(-50%, -50%);
+	position: absolute;
+	content: '';
+	width: 1em;
+	height: 1em;
+	transform: translate(-50%, -50%);
 }
 
 .coin::before{
-  border-radius: 100%;
-  /* transform: scale(1); */
-  background: rgb(20 67 101 / 50%);
-  border: 1px solid #1e81c8;
+	border-radius: 100%;
+	/* transform: scale(1); */
+	background: rgb(20 67 101 / 50%);
+	border: 1px solid #1e81c8;
 }
 
 .coin::after {
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: contain;
-  font-size: 70%;
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: contain;
+	font-size: 70%;
 }
 
 .has-active .coin {
-  opacity: 0.3;
+	opacity: 0.3;
 }
 
 .has-active .coin.active,
 .has-active .coin:hover {
-  opacity: 1;
-  filter: drop-shadow(0 0 10px #558ed1);
+	opacity: 1;
+	filter: drop-shadow(0 0 10px #558ed1);
 }
 
 
 * {
-  padding: 0;
-  margin: 0;
-  outline: 0;
-  overflow: visible;
+	padding: 0;
+	margin: 0;
+	outline: 0;
+	overflow: visible;
 }
 html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	height: 100%;
+	overflow: visible;
 }
 
 
