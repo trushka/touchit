@@ -61,7 +61,7 @@ const orbits = [];
 
 let width, height;
 
-const elements = {}
+const elements = {}, connects=[], points=[];
 let current = null;
 let centerX = Math.round(document.documentElement.clientWidth / 2 - 25);
 let centerY = 350;
@@ -104,11 +104,10 @@ for(let orb=0, start=0; orb<orbits.length; orb++) {
 			css: {'--i': i}
 		}, orbits[orb]);
 
-		//remove duplicates
-		elData[1].forEach(el0=>{
-			data[el0].forEach((el, i, els)=>{
-				if (el==id) delete els[i]
-			})
+		elData[1].forEach(el=>{
+			if (data[el].indexOf(id)<0) data[el].push(id);
+
+			if (el!=id && !connects.some(([a, b]) => a==id && b==el || a==el && b==id)) connects.push([id, el]);
 		})
 	}
 	start += count
