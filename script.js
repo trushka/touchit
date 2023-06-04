@@ -24,25 +24,39 @@ const connects = {
   "el23": ["el22", "el20", "el10", "el2", "el24", "el4", "el15", "el0", "el9"],
   "el12": ["el24", "el0", "el20", "el7", "el20", "el24"],
   "el18": ["el17", "el5", "el24", "el20", "el7", "el19", "el20", "el22"],
-  "el20": ["el2", "el18", "el12", "el23", "el22", "el23"]
+  "el20": ["el2", "el18", "el12", "el23", "el22", "el23"],
+  // "el25": ["el7", "el11", "el3", "el16", "el17", "el18", "el19"],
+  // "el26": ["el15", "el4", "el12", "el1", "el6", "el2", "el17", "el10", "el14", "el15", "el22", "el23", "el24"],
+  // "el27": ["el14", "el21", "el6", "el24", "el10", "el0", "el5", "el9", "el9", "el17", "el19", "el20", "el23"],
+  // "el28": ["el16", "el9", "el0", "el18", "el1", "el20", "el11", "el8", "el23"],
+  // "el29": ["el3", "el20", "el5", "el4", "el0", "el11", "el24", "el22"],
+  // "el30": ["el9", "el19", "el23"],
+  // "el31": ["el11", "el13", "el22", "el14", "el16", "el3", "el8", "el6", "el8", "el12", "el13", "el18", "el24"],
+  // "el32": ["el5", "el20", "el10", "el2", "el6", "el22", "el15", "el18", "el4"],
+  // "el33": ["el8", "el24", "el5", "el23", "el13", "el2", "el20", "el4", "el18"],
+  // "el34": ["el4", "el18", "el7", "el14", "el17", "el21", "el24"],
+  // "el35": ["el22", "el20", "el10", "el2", "el24", "el4", "el15", "el0", "el9"],
+  // "el36": ["el24", "el0", "el20", "el7", "el20", "el24"],
+  // "el37": ["el17", "el5", "el24", "el20", "el7", "el19", "el20", "el22"],
+  // "el38": ["el2", "el18", "el12", "el23", "el22", "el23"],
 }
 
 function newEl(props={}, parent) {
-  el=document.createElement(props.tagName||'div');
+  el=document.createElement(props.tag||'div');
   if (props.css) for (let prop in props.css) {
     el.style.setProperty(prop, props.css[prop])
   }
-  delete props.css;
+  delete props.css, props.tag;
   Object.assign(el, props);
   if (parent) parent.append(el);
   return el;
 }
+
 const coins = document.getElementById('coins');
 
-const canvas = document.createElement('canvas');
+const canvas = newEl({tag: 'canvas'}, coins);
 const ctx = canvas.getContext('2d');
 
-coins.append(canvas);
 const orbits = [];
 
 let width, height;
@@ -69,19 +83,19 @@ for(let i=0; i<3; i++) {
 
 for(let orb=0, start=0; orb<orbits.length; orb++) {
 
-  const count = Math.round(num/max*maxCards[orb])
-    end = start + count;
+  const count = Math.round(num/max*maxCards[orb]);
 
   orbits[orb].style.setProperty('--n', count);
 
-  for (let i=start; i<end; i++) {
+  for (let i=0; i<count; i++) {
     const elData = connectsArray[i];
     newEl({
       id: elData[0],
-      css: {'--i': i-start}
+      className: 'coin',
+      css: {'--i': i}
     }, orbits[orb]);
   }
-  start = end
+  start += count
 }
 
 
