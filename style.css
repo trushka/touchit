@@ -24,12 +24,15 @@ canvas {
   left: 50%;
   top: 50%;
   --r: 2em;
+  --dur: .2s;
 }
 .orbit1 {
   --r: 4.8em;
+  --dur: .3s;
 }
 .orbit2 {
   --r: 7.6em;
+  --dur: .4s;
 }
 @media (max-width: 800px) {
   .orbit {
@@ -43,13 +46,23 @@ canvas {
   }
 }
 
-.coin {
+.orbit .coin {
   position: absolute;
   cursor: pointer;
-  --ro: calc(var(
-  --i) / var(--n) * 1turn);
+  --ro: calc(var(--i) / var(--n) * 1turn);
   transform: rotate(var(--ro)) translateY(var(--r)) rotate(calc(-1 * var(--ro)));
+  transition: transform var(--dur);
 }
+.orbit.selected .coin {
+  --ro: calc(var(--i) / (var(--n) - 1) * 1turn);
+}
+.coin.selected ~ .coin {
+  --ro: calc((var(--i) - 1) / (var(--n) - 1) * 1turn);
+}
+.orbit.selected .coin.selected {
+  --r: 0;
+}
+
 .coin::before, .coin::after {
   position: absolute;
   content: '';
