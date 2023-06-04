@@ -24,15 +24,15 @@ canvas {
 	left: 50%;
 	top: 50%;
 	--r: 2em;
-	--dur: .2s;
+	--dur: .25s;
 }
 .orbit1 {
 	--r: 4.8em;
-	--dur: .3s;
+	--dur: .35s;
 }
 .orbit2 {
 	--r: 7.6em;
-	--dur: .4s;
+	--dur: .45s;
 }
 @media (max-width: 800px) {
 	.orbit {
@@ -51,7 +51,7 @@ canvas {
 	cursor: pointer;
 	--ro: calc(var(--i) / var(--n) * 1turn);
 	transform: rotate(var(--ro)) translateY(var(--r)) rotate(calc(-1 * var(--ro)));
-	transition: transform var(--dur);
+	transition: .3s, transform var(--dur);
 }
 .orbit.selected .coin {
 	--ro: calc(var(--i) / (var(--n) - 1) * 1turn);

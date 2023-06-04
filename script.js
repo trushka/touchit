@@ -80,11 +80,13 @@ for(let i=0; i<3; i++) {
 		onclick: function(e){
 			const selected = e.target.classList.contains('selected');
 
-			coins.querySelectorAll('.selected').forEach(el=>el.classList.remove('selected'))
+			coins.querySelectorAll('.selected').forEach(el=>el.classList.remove('selected', 'active'))
+			coins.classList.remove('has-active')
 			if (selected) return
 
 			this.classList.add('selected') ;
-			e.target.classList.add('selected') ;
+			e.target.classList.add('selected', 'active') ;
+			coins.classList.add('has-active');
 		}
 	}, coins);
 
