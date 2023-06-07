@@ -116,6 +116,29 @@ for(let orb=0, start=0; orb<orbits.length; orb++) {
 	start += count
 }
 
+const gl = canvas.getContext('webgl');
+twgl.addExtensionsToContext(gl);
+
+const coord = new Int8Array([
+	-1, 1,  1, 1,
+	-1,-1,  1,-1
+]),
+	bufferInfo = twgl.createBufferInfoFromArrays(gl, {coord}),
+	programInfo = twgl.createProgramInfo(gl, [`
+		attribute vec4 coord;
+		void main() {
+		  gl_Position = coord;
+		}
+	`, `
+		precision mediump float;
+
+		uniform vec2 resolution;
+		uniform float time;
+
+		void main() {
+		}
+	`]
+
 function resize() {
 	let {width, height} = coins.getBoundingClientRect();
 	width *= devicePixelRatio;
