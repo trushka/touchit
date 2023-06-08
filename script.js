@@ -117,8 +117,10 @@ for(let orb=0, start=0; orb<orbits.length; orb++) {
 }
 const elements = document.querySelectorAll('.coin');
 
-const gl = canvas.getContext('webgl');
+const gl = canvas.getContext('webgl');//, {premultipliedAlpha: false});
 twgl.addExtensionsToContext(gl);
+gl.enable(gl.BLEND);
+gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 const coord = [
 	-1, 1,  1, 1,
@@ -162,7 +164,7 @@ const coord = [
 				pb = b - p;
 			if (any(greaterThan(p, max(a, b)))) discard;
 			if (any(lessThan(p, min(a, b)))) discard;
-			float h = abs(a.x*b.y - b.x*a.y) / ab2;
+			float h = abs(pa.x*pb.y - pb.x*pa.y) / ab2;
 			if (h > 1.59) discard;
 			gl_FragColor = vec4(.7, .7, .7, .1);
 		}
