@@ -55,13 +55,13 @@ function newEl(props={}, parent) {
 const coins = document.getElementById('coins');
 
 const canvas = newEl({tag: 'canvas'}, coins);
-const ctx = canvas.getContext('2d');
+//const ctx = canvas.getContext('2d');
 
 const orbits = [];
 
 let width, height;
 
-const elements = {}, connects=[], points=[];
+const connects=[], points=[];
 let current = null;
 let centerX = Math.round(document.documentElement.clientWidth / 2 - 25);
 let centerY = 350;
@@ -115,38 +115,95 @@ for(let orb=0, start=0; orb<orbits.length; orb++) {
 	}
 	start += count
 }
+const elements = document.querySelectorAll('.coin');
 
 const gl = canvas.getContext('webgl');
 twgl.addExtensionsToContext(gl);
 
-const coord = new Int8Array([
+const coord = [
 	-1, 1,  1, 1,
 	-1,-1,  1,-1
-]),
+],
 	bufferInfo = twgl.createBufferInfoFromArrays(gl, {coord}),
 	programInfo = twgl.createProgramInfo(gl, [`
+		precision mediump float;
+
 		attribute vec4 coord;
+
+		uniform vec2 a;
+		uniform vec2 b;
+
+		varying vec2 ab;
+		varying float ab2;
+
 		void main() {
 		  gl_Position = coord;
+
+		  ab = a - b;
+		  ab2 = distance(a, b);
 		}
 	`, `
 		precision mediump float;
 
 		uniform vec2 resolution;
-		uniform float time;
+		uniform vec2 a;
+		uniform vec2 b;
+
+		varying vec2 ab;
+		varying float ab2;
+
+		//uniform float time;
 
 		void main() {
+			vec2 p = gl_FragCoord.xy;
+			p.y = resolution.y - p.y;
+			vec2 
+				pa = a - p,
+				pb = b - p;
+			if (any(greaterThan(p, max(a, b)))) discard;
+			if (any(lessThan(p, min(a, b)))) discard;
+			float h = abs(a.x*b.y - b.x*a.y) / ab2;
+			if (h > 1.59) discard;
+			gl_FragColor = vec4(.7, .7, .7, .1);
 		}
-	`]
+	`]);
+
+	gl.useProgram(programInfo.program);
+	twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
 
 function resize() {
 	let {width, height} = coins.getBoundingClientRect();
 	width *= devicePixelRatio;
 	height *= devicePixelRatio;
-	Object.assign(canvas, {width, height})
+	Object.assign(canvas, {width, height});
+	gl.viewport(0, 0, width, height);
+	programInfo.uniformSetters.resolution([width, height]);
 }
 window.addEventListener('resize', resize);
 resize();
+
+const positions = {};
+
+requestAnimationFrame(function render(t) {
+
+	gl.clear(gl.COLOR_BUFFER_BIT);
+
+	const {left, top} = canvas.getBoundingClientRect()
+
+	elements.forEach(el => {
+		const {x, y} = el.getBoundingClientRect();
+		positions[el.id] = [(x-left) * devicePixelRatio, (y - top) * devicePixelRatio]
+	})
+
+	connects.forEach(([a, b]) => {
+		programInfo.uniformSetters.a(positions[a]);
+		programInfo.uniformSetters.b(positions[b]);
+
+		twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLE_STRIP);
+	})
+
+	requestAnimationFrame(render);
+})
 
 /*------------------------------------
 
