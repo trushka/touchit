@@ -51,6 +51,23 @@ function newEl(props={}, parent) {
 	if (parent) parent.append(el);
 	return el;
 }
+function color(htColor) {
+	const text = htColor.replace('#', '');
+	const count = 1 + (text.length>4), array=[];
+	for (let i=0; i<4; i++) {
+		let val = text.substr(i*count, count);
+		//console.log(i, val, text, count);
+		if (count == 1) val+=val;
+		if (val && isNaN('0x'+val)) console.warn(htColor + ' is not a color!');
+		array.push(('0x'+(val||'ff'))/255)
+	}
+	return array;
+}
+const color0 = color('#889a');
+const dark = color('#7772');
+const light = color('#ddec');
+
+const thickness = 1.2;
 
 const coins = document.getElementById('coins');
 
@@ -71,6 +88,8 @@ console.log(document.documentElement.clientWidth / 2);
 const dataArray = Object.entries(data),
 	num = dataArray.length; //25;
 const maxCards = [8, 20, 30];
+
+const elements = {};
 
 let max=0;
 for(let i=0; i<3; i++) {
@@ -102,20 +121,33 @@ for(let orb=0, start=0; orb<orbits.length; orb++) {
 
 	for (let i=0; i<count; i++) {
 		const elData = dataArray[i+start], id=elData[0];
-		newEl({ id,
+
+		elements[id] = newEl({ id,
 			className: 'coin',
 			css: {'--i': i}
 		}, orbits[orb]);
-
-		elData[1].forEach(el=>{
-			if (data[el].indexOf(id)<0) data[el].push(id);
-
-			if (el!=id && !connects.some(([a, b]) => a==id && b==el || a==el && b==id)) connects.push([id, el]);
-		})
 	}
+
 	start += count
 }
-const elements = document.querySelectorAll('.coin');
+
+dataArray.forEach(([id, links]) => {
+	links.forEach(el=>{
+		const [el1, el2] = [elements[el], elements[id]];
+		if (!el2) {
+			console.warn(`elemetn #${el} in the list of #${id} connects not exist!`);
+			return;
+		}
+		if (data[el].indexOf(id)<0) data[el].push(id);
+
+		if (el==id || connects.some(({els: [a, b]}) => (a==el1 && b==el2) || (a==el2 && b==el1) )) return;
+		console.log(el, id)
+		connects.push({
+			els: [el1, el2],
+			color: [.5, .5, .5, 0]
+		});
+	})
+})
 
 const gl = canvas.getContext('webgl');//, {premultipliedAlpha: false});
 twgl.addExtensionsToContext(gl);
@@ -155,6 +187,9 @@ const coord = [
 		uniform vec2 a;
 		uniform vec2 b;
 
+		uniform float w;
+		uniform vec4 color;
+
 		varying vec2 ab;
 		varying float ab2;
 
@@ -168,14 +203,21 @@ const coord = [
 				pb = b - p;
 			//if (any(greaterThan(p, max(a, b)))) discard;
 			//if (any(lessThan(p, min(a, b)))) discard;
-			float h = abs(pa.x*pb.y - pb.x*pa.y) / ab2,
-				delta = fwidth(h)/2.;
-			gl_FragColor = vec4(.5, .5, .55, (1.2 - h)*cos(delta));
-		}
-	`]);
+			float h = abs(pa.x*pb.y - pb.x*pa.y) / ab2;
+			if (h > 1.2 + 2.5) discard;
 
-	gl.useProgram(programInfo.program);
-	twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+			float	delta = fwidth(1.2 - h)*.5;
+
+			gl_FragColor = color;
+			gl_FragColor.a *= (1.2 - h)*cos(delta);
+			if (gl_FragColor.a < .02) discard;
+		}
+	`]),
+	setUniform = programInfo.uniformSetters;
+
+gl.useProgram(programInfo.program);
+twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
+//setUniform.color0(color0);
 
 function resize() {
 	let {width, height} = coins.getBoundingClientRect();
@@ -183,544 +225,46 @@ function resize() {
 	height *= devicePixelRatio;
 	Object.assign(canvas, {width, height});
 	gl.viewport(0, 0, width, height);
-	programInfo.uniformSetters.resolution([width, height]);
+	setUniform.resolution([width, height]);
 }
 window.addEventListener('resize', resize);
 resize();
 
-const positions = {};
-
+let t0=0;
+const dt0 = 100;
 requestAnimationFrame(function render(t) {
+
+	const dt = Math.min(dt0, t-t0);
+	t0 = t;
 
 	gl.clear(gl.COLOR_BUFFER_BIT);
 
-	const {left, top, width, height} = canvas.getBoundingClientRect()
+	const {left, top, width, height} = canvas.getBoundingClientRect();
+	const mainColor = coins.classList.contains('has-active') ? dark : color0;
+	const selected = coins.querySelector('.coin.selected');
 
-	elements.forEach(el => {
-		const {x, y} = el.getBoundingClientRect();
-		positions[el.id] = [(x - left) * devicePixelRatio, (height - y + top) * devicePixelRatio]
-	})
+	for (let id in elements) {
+		const el = elements[id],
+			{x, y} = el.getBoundingClientRect();
+		el._pos = [(x - left) * devicePixelRatio, (height - y + top) * devicePixelRatio]//, .9]
+		el._highlighted = el.classList.contains('active');
+	}
+	const dc = dt*.007;
+	connects.forEach(({els: [a, b], color}) => {
+		
+		setUniform.a(a._pos);
+		setUniform.b(b._pos);
 
-	connects.forEach(([a, b]) => {
-		programInfo.uniformSetters.a(positions[a]);
-		programInfo.uniformSetters.b(positions[b]);
+		const targColor = (a == selected || b == selected) ? light : mainColor;
+
+		color.forEach((val, i) => {
+			color[i] += (targColor[i]-val)*dc
+		})
+
+		setUniform.color(color);
 
 		twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLE_STRIP);
 	})
 
 	requestAnimationFrame(render);
 })
-
-/*------------------------------------
-
-const calculateCoordinate = (count, r, cx, cy) => {
-	const sectors = [];
-	const maxCardFirst = 8;
-	const maxCardSecond = 20;
-	let startAngle = -90;
-	let endXAngle = 0;
-	let coefFirst = 2;
-	let coefFSecond = 1.2;
-	let coefFThird = 1.9;
-	let scale = 1;
-
-	if (count > maxCardSecond + maxCardFirst) {
-		scale = 0.8;
-	}
-
-	if (width < 800 && width >= 520) {
-		size = 40;
-		coefFirst = 2.8;
-		coefFSecond = 0.8;
-		coefFThird = 1.2;
-	} else if (width < 520) {
-		size = 30;
-		coefFirst = 3;
-		coefFSecond = 0.6;
-		coefFThird = 0.9;
-	}
-
-	coinsInner.style.transform = "scale(" + scale + ")";
-
-	for (let i = 0; i < count; i++) {
-		if (i <= maxCardFirst - 1) {
-			const angle = 360 / maxCardFirst;
-			endXAngle += angle;
-			const rad = Math.PI / 180;
-			const x = cx + r * Math.cos(startAngle * rad) / coefFirst;
-			const y = cy + r * Math.sin(startAngle * rad) / coefFirst;
-			startAngle += angle;
-			sectors.push({ x, y });
-		} else if (i <= maxCardSecond + maxCardFirst - 1) {
-			const angle = count - maxCardFirst > maxCardSecond ? 360 / maxCardSecond : 360 / (count - maxCardFirst);
-			endXAngle += angle;
-			const rad = Math.PI / 180;
-			const x = cx + r * coefFSecond * Math.cos(startAngle * rad);
-			const y = cy + r * coefFSecond * Math.sin(startAngle * rad);
-			startAngle += angle;
-			sectors.push({ x, y });
-		} else {
-			const angle = 360 / (count - (maxCardFirst + maxCardSecond));
-			endXAngle += angle;
-			const rad = Math.PI / 180;
-			const x = cx + r * coefFThird * Math.cos(startAngle * rad);
-			const y = cy + r * coefFThird * Math.sin(startAngle * rad);
-			startAngle += angle;
-			sectors.push({ x, y });
-
-		}
-	}
-
-	return sectors;
-};
-
-
-/*------------------------------------
-
-
-
-let sections = calculateCoordinate(num, 200, centerX, centerY);
-
-for (let i = num - 1; i >= 0; i--) {
-	// создание dom-элемента
-	const element = document.createElement('div')
-	const innerElement = document.createElement('div')
-	// element.addEventListener('mousedown', onMouseDown)
-	element.addEventListener('click', handleOnClick)
-	element.addEventListener('mouseover', onMouseOver)
-	element.addEventListener('mouseout', onMouseOut)
-	const id = 'el' + i
-	element.id = id
-	element.className = "coin"
-	// element.append(innerElement)
-	coinsInner.prepend(element)
-
-	// тут будут храниться и изменяться все его координаты
-	elements[id] = {
-		// x: (width / 2 - size / 2) + i * size,
-		x: sections[i].x,
-		y: sections[i].y,
-		startX: 0,
-		startY: 0
-	}
-
-	// начальное положение
-	translate(element, elements[id].x, elements[id].y)
-}
-
-// соединяем линиями
-connect(elements)
-
-/*------------------------------------
-var isActive = false;
-var canSetActive = true;
-var activeId = null;
-var activeOnMouseId = null;
-var x = 0;
-var y = 0;
-
-var startX = x;
-var startY = y;
-var endX = centerX;
-var endY = centerY;
-var duration = 250; // Время анимации в миллисекундах
-var durationTimeout = 350; // Время задержки в миллисекундах
-var startTime = null;
-
-var previousX, previousY;
-
-// Клик на элемент
-function handleOnClick(e) {
-	// Если есть активный элемент и клик произведён на активный элемент
-	if (isActive && canSetActive) {
-		let changeElem = activeId !== e.target.id;
-
-		x = elements[current.id].x = Math.round(elements[current.id].x);
-		y = elements[current.id].y = Math.round(elements[current.id].y);
-		startX = x;
-		startY = y;
-		startTime = null;
-
-		activeId = null
-		isActive = false;
-
-		canSetActive = false;
-
-		setTimeout(() => {
-			canSetActive = true;
-		}, durationTimeout);
-
-		endX = previousX;
-		endY = previousY;
-
-		if (x <= endX && y <= endY) {
-			requestAnimationFrame(drawPXPY);
-
-		} else if (x <= endX && y >= endY) {
-			requestAnimationFrame(drawPXMY);
-
-		} else if (x >= endX && y <= endY) {
-			requestAnimationFrame(drawMXPY);
-
-		} else if (x >= endX && y >= endY) {
-			requestAnimationFrame(drawMXMY);
-		}
-
-		onMouseOut();
-		coinsInner.classList.add("no-active");
-		coinsInner.classList.remove("has-active");
-
-		if (changeElem) {
-
-			setTimeout(() => {
-				current = e.target;
-				x = elements[current.id].x = Math.round(elements[current.id].x);
-				y = elements[current.id].y = Math.round(elements[current.id].y);
-				startX = x;
-				startY = y;
-				startTime = null;
-
-				activeId = current.id;
-				canSetActive = false;
-
-				setTimeout(() => {
-					canSetActive = true;
-				}, duration);
-
-				endX = centerX;
-				endY = centerY;
-				previousX = x;
-				previousY = y;
-
-				if (x <= endX && y <= endY) {
-					requestAnimationFrame(drawPXPY);
-
-				} else if (x <= endX && y >= endY) {
-					requestAnimationFrame(drawPXMY);
-
-				} else if (x >= endX && y <= endY) {
-					requestAnimationFrame(drawMXPY);
-
-				} else if (x >= endX && y >= endY) {
-					requestAnimationFrame(drawMXMY);
-				}
-
-				isActive = true;
-				coinsInner.classList.add("has-active");
-				coinsInner.classList.remove("no-active");
-			}, durationTimeout);
-		}
-	}
-
-	// Если нет активного элемента
-	if (activeId == null && canSetActive) {
-		current = e.target
-		x = elements[current.id].x = Math.round(elements[current.id].x);
-		y = elements[current.id].y = Math.round(elements[current.id].y);
-		startX = x;
-		startY = y;
-		startTime = null;
-
-		activeId = current.id;
-		canSetActive = false;
-
-		setTimeout(() => {
-			canSetActive = true;
-		}, duration);
-
-
-		endX = centerX;
-		endY = centerY;
-		previousX = x;
-		previousY = y;
-
-
-		if (x <= endX && y <= endY) {
-			requestAnimationFrame(drawPXPY);
-
-		} else if (x <= endX && y >= endY) {
-			requestAnimationFrame(drawPXMY);
-
-		} else if (x >= endX && y <= endY) {
-			requestAnimationFrame(drawMXPY);
-
-		} else if (x >= endX && y >= endY) {
-			requestAnimationFrame(drawMXMY);
-		}
-
-		isActive = true;
-		coinsInner.classList.add("has-active");
-		coinsInner.classList.remove("no-active");
-	}
-}
-
-// Draw --- Plus X | Plus Y
-function drawPXPY(timestamp) {
-	if (!startTime) startTime = timestamp;
-	var progress = timestamp - startTime;
-
-	x = Math.floor((progress / duration) * (endX - startX)) + startX;
-	y = Math.floor((progress / duration) * (endY - startY)) + startY;
-
-	if (x < endX || y < endY) {
-		requestAnimationFrame(drawPXPY);
-	} else {
-		x = endX;
-		y = endY;
-	}
-
-	elements[current.id].x = x;
-	elements[current.id].y = y;
-
-	translate(current, x, y, 'pxpy')
-	connect(elements)
-}
-
-// Draw --- Plus X | Minus Y
-function drawPXMY(timestamp) {
-	if (!startTime) startTime = timestamp;
-	var progress = timestamp - startTime;
-
-	x = Math.floor((progress / duration) * (endX - startX)) + startX;
-	y = startY - Math.floor((progress / duration) * (startY - endY));
-
-	if (x < endX || y > endY) {
-		requestAnimationFrame(drawPXMY);
-	} else {
-		x = endX;
-		y = endY;
-	}
-
-	elements[current.id].x = x;
-	elements[current.id].y = y;
-
-	translate(current, x, y, 'pxmy')
-	connect(elements)
-}
-
-// Draw --- Minus X | Plus Y
-function drawMXPY(timestamp) {
-	if (!startTime) startTime = timestamp;
-	var progress = timestamp - startTime;
-
-	x = startX - Math.floor((progress / duration) * (startX - endX));
-	y = Math.floor((progress / duration) * (endY - startY)) + startY;
-
-	if (x > endX || y < endY) {
-		requestAnimationFrame(drawMXPY);
-	} else {
-		x = endX;
-		y = endY;
-	}
-
-	elements[current.id].x = x;
-	elements[current.id].y = y;
-
-	translate(current, x, y, 'mxpy')
-	connect(elements)
-}
-
-// Draw --- Minus X | Minus Y
-function drawMXMY(timestamp) {
-	if (!startTime) startTime = timestamp;
-	var progress = timestamp - startTime;
-
-	x = startX - Math.floor((progress / duration) * (startX - endX));
-	y = startY - Math.floor((progress / duration) * (startY - endY));
-
-	if (x > endX || y > endY) {
-		requestAnimationFrame(drawMXMY);
-	} else {
-		x = endX;
-		y = endY;
-	}
-
-	elements[current.id].x = x;
-	elements[current.id].y = y;
-
-	translate(current, x, y, 'mxmy')
-	connect(elements)
-}
-
-// При наведении мыши на элемент
-function onMouseOver(e) {
-	if (!isActive && canSetActive) {
-		current = e.target
-		activeOnMouseId = current.id;
-
-		connect(elements);
-
-		coinsInner.classList.add("has-active");
-		coinsInner.classList.remove("no-active");
-	}
-}
-
-// При отведении мыши с элемента
-function onMouseOut(e) {
-
-	if (!isActive) {
-		activeOnMouseId = null;
-
-		connect(elements);
-
-
-		// Удалить класс .active со всех элементов
-		let coins = document.querySelectorAll('.active');
-		[].forEach.call(coins, function (el) {
-			el.classList.remove("active");
-		});
-
-		coinsInner.classList.add("no-active");
-		coinsInner.classList.remove("has-active");
-	}
-}
-
-
-/*------------------------------------
-
-function translate(el, x, y, func) {
-	el.style.transform = `translate(${x}px, ${y}px)`
-}
-
-function connect(elements) {
-	ctx.clearRect(0, 0, width, height);
-	var color = "#aeaeae";
-
-	for (var key in connects) {
-		for (let i = 0; i < connects[key].length; i++) {
-			if (key == activeOnMouseId || (isActive && key == activeId)) {
-				color = "#fff";
-
-				document.getElementById(key).classList.add("active");
-				document.getElementById(connects[key][i]).classList.add("active");
-
-			} else if (activeOnMouseId || isActive) {
-				color = "transparent";
-			} else {
-				color = "#464646";
-			}
-
-			drawLine(
-				elements[key].x,
-				elements[connects[key][i]].x,
-				elements[key].y,
-				elements[connects[key][i]].y,
-				color
-			)
-		}
-	}
-}
-
-function drawLine(x1, x2, y1, y2, color) {
-	ctx.beginPath()
-	// из центра квадрата
-	ctx.moveTo(x1 + size / 2, y1 + size / 2)
-	ctx.strokeStyle = color;
-
-	// var gradient = ctx.createLinearGradient(x2 + size / 2, 0, y2 + size / 2, 0);
-	// gradient.addColorStop(0, '#8f8f8f');
-	// gradient.addColorStop(.5, '#464646');
-	// gradient.addColorStop(1, '#6f6f6f');
-	// ctx.strokeStyle = gradient;
-	// в центр другого квадрата
-	ctx.lineTo(x2 + size / 2, y2 + size / 2)
-	ctx.closePath()
-	ctx.stroke()
-}
-
-/*------------------------------------*/
-
-// onresize = () => {
-//   width = canvas.width = 1000;
-//   height = canvas.height = 1000;
-//   connect(elements)
-// }
-
-
-
-
-/*------------------------------------*/
-
-// Mouse Wheel Zoom
-
-// var scale = 1,
-//   panning = false,
-//   pointX = 0,
-//   pointY = 0,
-//   start = { x: 0, y: 0 },
-//   zoom = document.getElementById("zoom");
-
-// function setTransform() {
-//   zoom.style.transform = "translate(" + pointX + "px, " + pointY + "px) scale(" + scale + ")";
-// }
-
-// zoom.onmousedown = function (e) {
-//   e.preventDefault();
-//   start = { x: e.clientX - pointX, y: e.clientY - pointY };
-//   panning = true;
-// }
-
-// zoom.onmouseup = function (e) {
-//   panning = false;
-// }
-
-// zoom.onmousemove = function (e) {
-//   e.preventDefault();
-//   if (!panning) {
-//     return;
-//   }
-//   pointX = (e.clientX - start.x);
-//   pointY = (e.clientY - start.y);
-//   setTransform();
-// }
-
-// zoom.onwheel = function (e) {
-//   // e.preventDefault();
-//   var xs = (e.clientX - pointX) / scale,
-//     ys = (e.clientY - pointY) / scale,
-//     delta = (e.wheelDelta ? e.wheelDelta : -e.deltaY);
-//   (delta > 0) ? (scale *= 1.2) : (scale /= 1.2);
-//   pointX = e.clientX - xs * scale;
-//   pointY = e.clientY - ys * scale;
-
-//   setTransform();
-// }
-
-
-
-
-
-
-
-// function generateRandomConnections(numElements) {
-//   var connections = {};
-
-//   // Создаем связи между элементами
-//   for (var i = 0; i < numElements; i++) {
-//     var randomCount = Math.floor(Math.random() * (numElements / 2)) + 1; // Случайное количество связей
-//     var randomConnections = [];
-
-//     for (var j = 0; j < randomCount; j++) {
-//       var randomIndex = Math.floor(Math.random() * numElements); // Случайный индекс другого элемента
-
-//       // Убеждаемся, что случайно выбранный элемент не совпадает с текущим элементом и не был добавлен ранее
-//       if (randomIndex !== i && randomConnections.indexOf('el' + randomIndex) === -1) {
-//         randomConnections.push('el' + randomIndex);
-
-//         // Добавляем обратную связь от случайно выбранного элемента к текущему элементу
-//         if (connections['el' + randomIndex]) {
-//           connections['el' + randomIndex].push('el' + i);
-//         } else {
-//           connections['el' + randomIndex] = ['el' + i];
-//         }
-//       }
-//     }
-
-//     connections['el' + i] = randomConnections; // Связываем текущий элемент с сгенерированными случайными связями
-//   }
-
-//   return connections;
-// }
-
-// var json = JSON.stringify(generateRandomConnections(25));
-// console.log(json);
