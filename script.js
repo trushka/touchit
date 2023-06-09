@@ -204,12 +204,12 @@ const coord = [
 			//if (any(greaterThan(p, max(a, b)))) discard;
 			//if (any(lessThan(p, min(a, b)))) discard;
 			float h = abs(pa.x*pb.y - pb.x*pa.y) / ab2;
-			if (h > 1.2 + 2.5) discard;
+			if (h > w + 2.5) discard;
 
-			float	delta = fwidth(1.2 - h)*.5;
+			float	delta = fwidth(w - h)*.5;
 
 			gl_FragColor = color;
-			gl_FragColor.a *= (1.2 - h)*cos(delta);
+			gl_FragColor.a *= (w - h)*cos(delta);
 			if (gl_FragColor.a < .02) discard;
 		}
 	`]),
@@ -226,6 +226,10 @@ function resize() {
 	Object.assign(canvas, {width, height});
 	gl.viewport(0, 0, width, height);
 	setUniform.resolution([width, height]);
+	const elPixelRatio = parseInt(getComputedStyle(document.querySelector('.orbit')).fontSize) / 50;
+
+	console.log(elPixelRatio);
+	setUniform.w(thickness*devicePixelRatio*elPixelRatio);
 }
 window.addEventListener('resize', resize);
 resize();
