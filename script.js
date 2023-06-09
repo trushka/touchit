@@ -170,7 +170,7 @@ const coord = [
 			//if (any(lessThan(p, min(a, b)))) discard;
 			float h = abs(pa.x*pb.y - pb.x*pa.y) / ab2,
 				delta = fwidth(h)/2.;
-			gl_FragColor = vec4(.7, .7, .7, (1.2 - h)*cos(delta));
+			gl_FragColor = vec4(.5, .5, .55, (1.2 - h)*cos(delta));
 		}
 	`]);
 
