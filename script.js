@@ -123,31 +123,35 @@ gl.enable(gl.BLEND);
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 const coord = [
-	-1, 1,  1, 1,
-	-1,-1,  1,-1
+	0, 1,  1, 1,
+	0, 0,  1, 0
 ],
 	bufferInfo = twgl.createBufferInfoFromArrays(gl, {coord}),
 	programInfo = twgl.createProgramInfo(gl, [`
 		precision mediump float;
 
-		attribute vec4 coord;
+		attribute vec2 coord;
 
 		uniform vec2 a;
 		uniform vec2 b;
+		uniform vec2 resolution;
 
 		varying vec2 ab;
 		varying float ab2;
 
 		void main() {
-		  gl_Position = coord;
+			vec2 maxab = max(a, b)+2.;
+			vec2 minab = min(a, b)-2.;
+		  gl_Position = vec4(mix(minab, maxab, coord)/resolution*2. - 1., 0, 1);
 
 		  ab = a - b;
 		  ab2 = distance(a, b);
 		}
 	`, `
+		#extension GL_OES_standard_derivatives : enable
+
 		precision mediump float;
 
-		uniform vec2 resolution;
 		uniform vec2 a;
 		uniform vec2 b;
 
@@ -158,15 +162,15 @@ const coord = [
 
 		void main() {
 			vec2 p = gl_FragCoord.xy;
-			p.y = resolution.y - p.y;
+			//p.y = resolution.y - p.y;
 			vec2 
 				pa = a - p,
 				pb = b - p;
-			if (any(greaterThan(p, max(a, b)))) discard;
-			if (any(lessThan(p, min(a, b)))) discard;
-			float h = abs(pa.x*pb.y - pb.x*pa.y) / ab2;
-			if (h > 1.59) discard;
-			gl_FragColor = vec4(.7, .7, .7, .1);
+			//if (any(greaterThan(p, max(a, b)))) discard;
+			//if (any(lessThan(p, min(a, b)))) discard;
+			float h = abs(pa.x*pb.y - pb.x*pa.y) / ab2,
+				delta = fwidth(h)/2.;
+			gl_FragColor = vec4(.7, .7, .7, (1.2 - h)*cos(delta));
 		}
 	`]);
 
@@ -190,11 +194,11 @@ requestAnimationFrame(function render(t) {
 
 	gl.clear(gl.COLOR_BUFFER_BIT);
 
-	const {left, top} = canvas.getBoundingClientRect()
+	const {left, top, width, height} = canvas.getBoundingClientRect()
 
 	elements.forEach(el => {
 		const {x, y} = el.getBoundingClientRect();
-		positions[el.id] = [(x-left) * devicePixelRatio, (y - top) * devicePixelRatio]
+		positions[el.id] = [(x - left) * devicePixelRatio, (height - y + top) * devicePixelRatio]
 	})
 
 	connects.forEach(([a, b]) => {
