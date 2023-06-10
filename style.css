@@ -56,7 +56,7 @@ canvas {
 	transform: rotate(var(--ro)) translateY(var(--r)) rotate(calc(-1 * var(--ro)));
 	transition: transform var(--dur);
 	will-change: transform;
-	/* isolation: isolate; */
+	isolation: isolate;
 }
 .orbit.selected .coin {
 	--ro: calc(var(--i) / (var(--n) - 1) * 1turn);
@@ -74,28 +74,25 @@ canvas {
 	width: 1em;
 	height: 1em;
 	transform: translate(-50%, -50%);
-	border-radius: 100%;
-	box-sizing: border-box;
-	transition: .3s;
-	will-change: opacity;
-}
-
-.coin::before{
 	background: var(--bg) center/contain  no-repeat;
 	background-origin: content-box;
 	border: rgb(20 67 101 / 50%) .15em solid;
 	box-shadow: 0 0 0 1px #1e81c8;
+	border-radius: 100%;
+	box-sizing: border-box;
+	transition: .35s;
+	will-change: opacity;
+}
+
+.coin::before{
 	/* transform: scale(1); */
 }
 
 .coin::after {
-	 /* filter: brightness(1.4) contrast(3.7) blur(.1em) brightness(1.6) contrast(2.9); */
-	 /* mix-blend-mode: normal; */
-	 opacity: 0.01;
-	 color: #56b8ff63;
-	 --blur: .3em;
-	 --w: 0.13em;
-	 box-shadow: 0 0 var(--blur) var(--w),  0 0 var(--blur)  inset;
+	filter: drop-shadow(0 0 calc(.1em + 5px) #558ed1);
+	mix-blend-mode: lighten;
+	mix-blend-mode: plus-lighter;
+	opacity: 0;
 }
 
 .has-active .coin::before {
@@ -104,7 +101,7 @@ canvas {
 
 .has-active .coin.active::before,
 .has-active .coin:hover::before {
-	opacity: 1;
+	opacity: 0;
 }
 
 .has-active .coin.active::after,

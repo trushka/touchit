@@ -58,13 +58,13 @@ function color(htColor) {
 		let val = text.substr(i*count, count);
 		//console.log(i, val, text, count);
 		if (count == 1) val+=val;
-		if (val && isNaN('0x'+val)) console.warn(htColor + ' is not a color!');
+		if (val && isNaN('0x'+val)) console.warn(htColor + ' is not a html hex color!');
 		array.push(('0x'+(val||'ff'))/255)
 	}
 	return array;
 }
-const color0 = color('#889a');
-const dark = color('#7772');
+const color0 = color('#7786');
+const dark = color('#77777f17');
 const light = color('#ddec');
 
 const thickness = 1.2;
