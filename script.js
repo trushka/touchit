@@ -78,10 +78,7 @@ const orbits = [];
 
 let width, height;
 
-const connects=[], points=[];
-let current = null;
-let centerX = Math.round(document.documentElement.clientWidth / 2 - 25);
-let centerY = 350;
+const connects=[];
 
 console.log(document.documentElement.clientWidth / 2);
 
@@ -141,10 +138,14 @@ dataArray.forEach(([id, links]) => {
 		if (data[el].indexOf(id)<0) data[el].push(id);
 
 		if (el==id || connects.some(({els: [a, b]}) => (a==el1 && b==el2) || (a==el2 && b==el1) )) return;
-		console.log(el, id)
+
+		const distA = 180 + Math.random()*40,  distB = 180 + Math.random()*40;
 		connects.push({
 			els: [el1, el2],
-			color: [.5, .5, .5, 0]
+			color: [.5, .5, .5, 0],
+			distA, distB,
+			shiftA: Math.random()*distA,
+			shiftB: Math.random()*distB,
 		});
 	})
 })
@@ -156,7 +157,7 @@ gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
 const coord = [
 	0, 1,  1, 1,
-	0, 0,  1, 0
+	0,-1,  1,-1
 ],
 	bufferInfo = twgl.createBufferInfoFromArrays(gl, {coord}),
 	programInfo = twgl.createProgramInfo(gl, [`
@@ -167,6 +168,7 @@ const coord = [
 		uniform vec2 a;
 		uniform vec2 b;
 		uniform vec2 resolution;
+		uniform float w0, pRatio;
 
 		varying vec2 ab;
 		varying float ab2;
@@ -174,10 +176,15 @@ const coord = [
 		void main() {
 			vec2 maxab = max(a, b)+2.;
 			vec2 minab = min(a, b)-2.;
-		  gl_Position = vec4(mix(minab, maxab, coord)/resolution*2. - 1., 0, 1);
 
 		  ab = a - b;
 		  ab2 = distance(a, b);
+
+		  vec2 ort = normalize(ab).yx*w0*pRatio*10.;
+		  ort.x *= -1.;
+		  gl_Position.xy = ((coord.x > 0. ? a : b) + ort * coord.y) / resolution * 2. - 1.;
+		  gl_Position.w = 1.;
+		  //vec4(mix(minab, maxab, coord)/resolution*2. - 1.;
 		}
 	`, `
 		#extension GL_OES_standard_derivatives : enable
@@ -187,7 +194,7 @@ const coord = [
 		uniform vec2 a;
 		uniform vec2 b;
 
-		uniform float w;
+		uniform float w0, pRatio;
 		uniform vec4 color;
 
 		varying vec2 ab;
@@ -203,22 +210,25 @@ const coord = [
 				pb = b - p;
 			//if (any(greaterThan(p, max(a, b)))) discard;
 			//if (any(lessThan(p, min(a, b)))) discard;
-			float h = abs(pa.x*pb.y - pb.x*pa.y) / ab2;
-			if (h > w + 2.5) discard;
+			float w = w0*pRatio,
+			 h = abs(pa.x*pb.y - pb.x*pa.y) / ab2;
+			//if (h > w + 2.8) discard;
 
-			float	delta = fwidth(w - h)*.5;
+			float	delta = fwidth(h)*.5;
 
 			gl_FragColor = color;
-			gl_FragColor.a *= (w - h)*cos(delta);
-			if (gl_FragColor.a < .02) discard;
+			gl_FragColor.a *= (w + .2 - h)*cos(delta);
+			//gl_FragColor.a = max(gl_FragColor.a, .1);
+			//if (gl_FragColor.a < .02) discard;
 		}
 	`]),
 	setUniform = programInfo.uniformSetters;
 
 gl.useProgram(programInfo.program);
 twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-//setUniform.color0(color0);
+setUniform.w0(thickness);
 
+let effectScale;
 function resize() {
 	let {width, height} = coins.getBoundingClientRect();
 	width *= devicePixelRatio;
@@ -228,15 +238,21 @@ function resize() {
 	setUniform.resolution([width, height]);
 	const elPixelRatio = parseInt(getComputedStyle(document.querySelector('.orbit')).fontSize) / 50;
 
-	console.log(elPixelRatio);
-	setUniform.w(thickness*devicePixelRatio*elPixelRatio);
+	effectScale = devicePixelRatio*elPixelRatio;
+	setUniform.pRatio(effectScale);
 }
 window.addEventListener('resize', resize);
-resize();
+//resize();
 
 let t0=0;
 const dt0 = 100;
 requestAnimationFrame(function render(t) {
+	requestAnimationFrame(render);
+
+	if (!effectScale) { //check css loading
+		if (!getComputedStyle(document.querySelector('.coin')).getPropertyValue('--ro')) return;
+		resize()
+	}
 
 	const dt = Math.min(dt0, t-t0);
 	t0 = t;
@@ -253,7 +269,7 @@ requestAnimationFrame(function render(t) {
 		el._pos = [(x - left) * devicePixelRatio, (height - y + top) * devicePixelRatio]//, .9]
 		el._highlighted = el.classList.contains('active');
 	}
-	const dc = dt*.007;
+	const dc = dt*.006;
 	connects.forEach(({els: [a, b], color}) => {
 		
 		setUniform.a(a._pos);
@@ -269,6 +285,4 @@ requestAnimationFrame(function render(t) {
 
 		twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLE_STRIP);
 	})
-
-	requestAnimationFrame(render);
 })

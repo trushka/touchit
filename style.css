@@ -51,9 +51,12 @@ canvas {
 .orbit .coin {
 	position: absolute;
 	cursor: pointer;
-	--ro: calc(var(--i) / var(--n) * 1turn);
+	--ro: calc(var(
+	--i) / var(--n) * 1turn);
 	transform: rotate(var(--ro)) translateY(var(--r)) rotate(calc(-1 * var(--ro)));
-	transition: .3s, transform var(--dur);
+	transition: transform var(--dur);
+	will-change: transform;
+	/* isolation: isolate; */
 }
 .orbit.selected .coin {
 	--ro: calc(var(--i) / (var(--n) - 1) * 1turn);
@@ -66,35 +69,47 @@ canvas {
 }
 
 .coin::before, .coin::after {
-	position: absolute;
 	content: '';
+	position: absolute;
 	width: 1em;
 	height: 1em;
 	transform: translate(-50%, -50%);
+	border-radius: 100%;
+	box-sizing: border-box;
+	transition: .3s;
+	will-change: opacity;
 }
 
 .coin::before{
-	border-radius: 100%;
+	background: var(--bg) center/contain  no-repeat;
+	background-origin: content-box;
+	border: rgb(20 67 101 / 50%) .15em solid;
+	box-shadow: 0 0 0 1px #1e81c8;
 	/* transform: scale(1); */
-	background: rgb(20 67 101 / 50%);
-	border: 1px solid #1e81c8;
 }
 
 .coin::after {
-	background-position: center;
-	background-repeat: no-repeat;
-	background-size: contain;
-	font-size: 70%;
+	 /* filter: brightness(1.4) contrast(3.7) blur(.1em) brightness(1.6) contrast(2.9); */
+	 /* mix-blend-mode: normal; */
+	 opacity: 0.01;
+	 color: #56b8ff63;
+	 --blur: .3em;
+	 --w: 0.13em;
+	 box-shadow: 0 0 var(--blur) var(--w),  0 0 var(--blur)  inset;
 }
 
-.has-active .coin {
+.has-active .coin::before {
 	opacity: 0.3;
 }
 
-.has-active .coin.active,
-.has-active .coin:hover {
+.has-active .coin.active::before,
+.has-active .coin:hover::before {
 	opacity: 1;
-	filter: drop-shadow(0 0 10px #558ed1);
+}
+
+.has-active .coin.active::after,
+.has-active .coin:hover::after {
+	opacity: 1;
 }
 
 
@@ -114,45 +129,45 @@ html, body {
 
 
 
-#el0::after {background-image: url(./icons/Stride40.png);}
-#el1::after {background-image: url(./icons/Persistance40.svg);}
-#el2::after {background-image: url(./icons/Secret40.svg);}
-#el3::after {background-image: url(./icons/Stargaze40-2.png);}
-#el4::after {background-image: url(./icons/Sommelier40.png);}
-#el5::after {background-image: url(./icons/Umee40.png);}
-#el6::after {background-image: url(./icons/Agoric40.png);}
-#el7::after {background-image: url(./icons/Akash40.svg);}
-#el8::after {background-image: url(./icons/Axelar40.png);}
-#el9::after {background-image: url(./icons/Canto40.png);}
-#el8::after {background-image: url(./icons/Comdex40.png);}
-#el10::after {background-image: url(./icons/Cosmos40.svg);}
-#el11::after {background-image: url(./icons/Crescent40.png);}
-#el12::after {background-image: url(./icons/Cronos40.png);}
-#el13::after {background-image: url(./icons/Crypto40.svg);}
-#el14::after {background-image: url(./icons/Evmos40-2.png);}
-#el15::after {background-image: url(./icons/Injective40.svg);}
-#el16::after {background-image: url(./icons/IRIS40.svg);}
-#el17::after {background-image: url(./icons/Juno2-40.svg);}
-#el18::after {background-image: url(./icons/Kujira40.png);}
-#el19::after {background-image: url(./icons/Osmosis40.svg);}
-#el20::after {background-image: url(./icons/Injective40.svg);}
-#el21::after {background-image: url(./icons/Crescent40.png);}
-#el22::after {background-image: url(./icons/Cronos40.png);}
-#el23::after {background-image: url(./icons/Crypto40.svg);}
-#el24::after {background-image: url(./icons/Evmos40-2.png);}
-#el25::after {background-image: url(./icons/Injective40.svg);}
-#el26::after {background-image: url(./icons/IRIS40.svg);}
-#el27::after {background-image: url(./icons/Juno2-40.svg);}
-#el28::after {background-image: url(./icons/Kujira40.png);}
-#el29::after {background-image: url(./icons/Osmosis40.svg);}
-#el30::after {background-image: url(./icons/Injective40.svg);}
-#el31::after {background-image: url(./icons/Crescent40.png);}
-#el32::after {background-image: url(./icons/Cronos40.png);}
-#el33::after {background-image: url(./icons/Crypto40.svg);}
-#el34::after {background-image: url(./icons/Evmos40-2.png);}
-#el35::after {background-image: url(./icons/Injective40.svg);}
-#el36::after {background-image: url(./icons/IRIS40.svg);}
-#el37::after {background-image: url(./icons/Juno2-40.svg);}
-#el38::after {background-image: url(./icons/Kujira40.png);}
-#el39::after {background-image: url(./icons/Osmosis40.svg);}
-#el40::after {background-image: url(./icons/Crescent40.png);}
+#el0{--bg: url(./icons/Stride40.png);}
+#el1{--bg: url(./icons/Persistance40.svg);}
+#el2{--bg: url(./icons/Secret40.svg);}
+#el3{--bg: url(./icons/Stargaze40-2.png);}
+#el4{--bg: url(./icons/Sommelier40.png);}
+#el5{--bg: url(./icons/Umee40.png);}
+#el6{--bg: url(./icons/Agoric40.png);}
+#el7{--bg: url(./icons/Akash40.svg);}
+#el8{--bg: url(./icons/Axelar40.png);}
+#el9{--bg: url(./icons/Canto40.png);}
+#el8{--bg: url(./icons/Comdex40.png);}
+#el10{--bg: url(./icons/Cosmos40.svg);}
+#el11{--bg: url(./icons/Crescent40.png);}
+#el12{--bg: url(./icons/Cronos40.png);}
+#el13{--bg: url(./icons/Crypto40.svg);}
+#el14{--bg: url(./icons/Evmos40-2.png);}
+#el15{--bg: url(./icons/Injective40.svg);}
+#el16{--bg: url(./icons/IRIS40.svg);}
+#el17{--bg: url(./icons/Juno2-40.svg);}
+#el18{--bg: url(./icons/Kujira40.png);}
+#el19{--bg: url(./icons/Osmosis40.svg);}
+#el20{--bg: url(./icons/Injective40.svg);}
+#el21{--bg: url(./icons/Crescent40.png);}
+#el22{--bg: url(./icons/Cronos40.png);}
+#el23{--bg: url(./icons/Crypto40.svg);}
+#el24{--bg: url(./icons/Evmos40-2.png);}
+#el25{--bg: url(./icons/Injective40.svg);}
+#el26{--bg: url(./icons/IRIS40.svg);}
+#el27{--bg: url(./icons/Juno2-40.svg);}
+#el28{--bg: url(./icons/Kujira40.png);}
+#el29{--bg: url(./icons/Osmosis40.svg);}
+#el30{--bg: url(./icons/Injective40.svg);}
+#el31{--bg: url(./icons/Crescent40.png);}
+#el32{--bg: url(./icons/Cronos40.png);}
+#el33{--bg: url(./icons/Crypto40.svg);}
+#el34{--bg: url(./icons/Evmos40-2.png);}
+#el35{--bg: url(./icons/Injective40.svg);}
+#el36{--bg: url(./icons/IRIS40.svg);}
+#el37{--bg: url(./icons/Juno2-40.svg);}
+#el38{--bg: url(./icons/Kujira40.png);}
+#el39{--bg: url(./icons/Osmosis40.svg);}
+#el40{--bg: url(./icons/Crescent40.png);}
