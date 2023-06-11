@@ -139,14 +139,15 @@ dataArray.forEach(([id, links]) => {
 
 		if (el==id || connects.some(({els: [a, b]}) => (a==el1 && b==el2) || (a==el2 && b==el1) )) return;
 
-		const distA = 180 + Math.random()*40,  distB = 180 + Math.random()*40;
+		let effect = [180 + Math.random()*40, 180 + Math.random()*40]; // distances between glare
+		effect = effect.concat([Math.random()*effect[0], Math.random()*effect[1]]); // initial glare shift
+
 		connects.push({
 			els: [el1, el2],
 			color: [.5, .5, .5, 0],
-			distA, distB,
-			shiftA: Math.random()*distA,
-			shiftB: Math.random()*distB,
+			effect 
 		});
+		console.log(effect)
 	})
 })
 
@@ -170,7 +171,7 @@ const coord = [
 		uniform vec2 resolution;
 		uniform float w0, pRatio;
 
-		varying vec2 ab;
+		varying vec2 ab, vCoord;
 		varying float ab2;
 
 		void main() {
@@ -178,12 +179,15 @@ const coord = [
 			vec2 minab = min(a, b)-2.;
 
 		  ab = a - b;
-		  ab2 = distance(a, b);
+		  ab2 = length(ab)/pRatio;
 
-		  vec2 ort = normalize(ab).yx*w0*pRatio*10.;
+		  float wHalf = w0*pRatio*10.;
+		  vec2 ort = normalize(ab).yx*wHalf;
 		  ort.x *= -1.;
+
 		  gl_Position.xy = ((coord.x > 0. ? a : b) + ort * coord.y) / resolution * 2. - 1.;
 		  gl_Position.w = 1.;
+		  vCoord = coord*vec2(ab2, wHalf); 
 		  //vec4(mix(minab, maxab, coord)/resolution*2. - 1.;
 		}
 	`, `
@@ -195,9 +199,9 @@ const coord = [
 		uniform vec2 b;
 
 		uniform float w0, pRatio;
-		uniform vec4 color;
+		uniform vec4 color, effData;
 
-		varying vec2 ab;
+		varying vec2 ab, vCoord;
 		varying float ab2;
 
 		//uniform float time;
@@ -211,12 +215,13 @@ const coord = [
 			//if (any(greaterThan(p, max(a, b)))) discard;
 			//if (any(lessThan(p, min(a, b)))) discard;
 			float w = w0*pRatio,
-			 h = abs(pa.x*pb.y - pb.x*pa.y) / ab2;
+			 h = abs(vCoord.y);
 			//if (h > w + 2.8) discard;
 
-			float	delta = fwidth(h)*.5;
+			float	delta = fwidth(h)*.5,
+				effect = abs(mod(vCoord.x, effData.x) - effData.z) > 5. ? 0.: 1.; //smoothstep(-10., 0., );
 
-			gl_FragColor = color;
+			gl_FragColor = color * (1. + .3 * effect);
 			gl_FragColor.a *= (w + .2 - h)*cos(delta);
 			//gl_FragColor.a = max(gl_FragColor.a, .1);
 			//if (gl_FragColor.a < .02) discard;
@@ -269,8 +274,8 @@ requestAnimationFrame(function render(t) {
 		el._pos = [(x - left) * devicePixelRatio, (height - y + top) * devicePixelRatio]//, .9]
 		el._highlighted = el.classList.contains('active');
 	}
-	const dc = dt*.006;
-	connects.forEach(({els: [a, b], color}) => {
+	const dc = dt*.006, dShift = dt * .1;
+	connects.forEach(({els: [a, b], color, effect}) => {
 		
 		setUniform.a(a._pos);
 		setUniform.b(b._pos);
@@ -282,6 +287,10 @@ requestAnimationFrame(function render(t) {
 		})
 
 		setUniform.color(color);
+
+		effect[2] = (effect[2] + dShift) % effect[0];
+		effect[3] = (effect[3] + dShift) % effect[1];
+		setUniform.effData(effect);
 
 		twgl.drawBufferInfo(gl, bufferInfo, gl.TRIANGLE_STRIP);
 	})

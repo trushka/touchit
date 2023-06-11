@@ -56,7 +56,7 @@ canvas {
 	transform: rotate(var(--ro)) translateY(var(--r)) rotate(calc(-1 * var(--ro)));
 	transition: transform var(--dur);
 	will-change: transform;
-	isolation: isolate;
+	/* isolation: isolate; */
 }
 .orbit.selected .coin {
 	--ro: calc(var(--i) / (var(--n) - 1) * 1turn);
