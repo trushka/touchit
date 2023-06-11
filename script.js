@@ -139,7 +139,7 @@ dataArray.forEach(([id, links]) => {
 
 		if (el==id || connects.some(({els: [a, b]}) => (a==el1 && b==el2) || (a==el2 && b==el1) )) return;
 
-		let effect = [180 + Math.random()*40, 180 + Math.random()*40]; // distances between glare
+		let effect = [220 + Math.random()*50, 220 + Math.random()*50]; // distances between glare
 		effect = effect.concat([Math.random()*effect[0], Math.random()*effect[1]]); // initial glare shift
 
 		connects.push({
@@ -204,25 +204,23 @@ const coord = [
 		varying vec2 ab, vCoord;
 		varying float ab2;
 
-		//uniform float time;
+		float pow2(float val) {return val*val;}
 
 		void main() {
 			vec2 p = gl_FragCoord.xy;
-			//p.y = resolution.y - p.y;
 			vec2 
 				pa = a - p,
 				pb = b - p;
-			//if (any(greaterThan(p, max(a, b)))) discard;
-			//if (any(lessThan(p, min(a, b)))) discard;
 			float w = w0*pRatio,
 			 h = abs(vCoord.y);
 			//if (h > w + 2.8) discard;
 
-			float	delta = fwidth(h)*.5,
-				effect = abs(mod(vCoord.x, effData.x) - effData.z) > 5. ? 0.: 1.; //smoothstep(-10., 0., );
+			float	delta =  mod(vCoord.x, effData.x) - effData.z,
+				effect = delta<.0 ? pow2(smoothstep(-30., 0., delta)) : smoothstep(-6., 0., -delta);
 
 			gl_FragColor = color * (1. + .3 * effect);
-			gl_FragColor.a *= (w + .2 - h)*cos(delta);
+			w += w * .5 * effect;
+			gl_FragColor.a *= (w + .2 - h)*cos(fwidth(h)*.5);
 			//gl_FragColor.a = max(gl_FragColor.a, .1);
 			//if (gl_FragColor.a < .02) discard;
 		}
@@ -274,7 +272,7 @@ requestAnimationFrame(function render(t) {
 		el._pos = [(x - left) * devicePixelRatio, (height - y + top) * devicePixelRatio]//, .9]
 		el._highlighted = el.classList.contains('active');
 	}
-	const dc = dt*.006, dShift = dt * .1;
+	const dc = dt*.006, dShift = dt * .03;
 	connects.forEach(({els: [a, b], color, effect}) => {
 		
 		setUniform.a(a._pos);
