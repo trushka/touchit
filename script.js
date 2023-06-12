@@ -67,8 +67,6 @@ const color0 = color('#7786');
 const dark = color('#77777f17');
 const light = color('#ddec');
 
-const thickness = 1.2;
-
 const coins = document.getElementById('coins');
 
 const canvas = newEl({tag: 'canvas'}, coins);
@@ -139,7 +137,7 @@ dataArray.forEach(([id, links]) => {
 
 		if (el==id || connects.some(({els: [a, b]}) => (a==el1 && b==el2) || (a==el2 && b==el1) )) return;
 
-		let effect = [220 + Math.random()*50, 220 + Math.random()*50]; // distances between glare
+		let effect = [300 + Math.random()*100, 300 + Math.random()*100]; // distances between glare
 		effect = effect.concat([Math.random()*effect[0], Math.random()*effect[1]]); // initial glare shift
 
 		connects.push({
@@ -169,7 +167,7 @@ const coord = [
 		uniform vec2 a;
 		uniform vec2 b;
 		uniform vec2 resolution;
-		uniform float w0, pRatio;
+		uniform float pRatio;
 
 		varying vec2 ab, vCoord;
 		varying float ab2;
@@ -181,7 +179,7 @@ const coord = [
 		  ab = a - b;
 		  ab2 = length(ab)/pRatio;
 
-		  float wHalf = w0*pRatio*10.;
+		  float wHalf = pRatio*12.;
 		  vec2 ort = normalize(ab).yx*wHalf;
 		  ort.x *= -1.;
 
@@ -198,7 +196,7 @@ const coord = [
 		uniform vec2 a;
 		uniform vec2 b;
 
-		uniform float w0, pRatio;
+		uniform float pRatio;
 		uniform vec4 color, effData;
 
 		varying vec2 ab, vCoord;
@@ -211,16 +209,16 @@ const coord = [
 			vec2 
 				pa = a - p,
 				pb = b - p;
-			float w = w0*pRatio,
+			float w = .9*pRatio,
 			 h = abs(vCoord.y);
 			//if (h > w + 2.8) discard;
 
-			float	delta =  mod(vCoord.x, effData.x) - effData.z,
-				effect = delta<.0 ? pow2(smoothstep(-30., 0., delta)) : smoothstep(-6., 0., -delta);
+			float	delta =  mod(-vCoord.x + effData.z, effData.x),
+				effect = exp(-.3-.12*delta)*(sqrt(delta)+.1);
 
-			gl_FragColor = color * (1. + .3 * effect);
-			w += w * .5 * effect;
-			gl_FragColor.a *= (w + .2 - h)*cos(fwidth(h)*.5);
+			gl_FragColor = color + vec4(.5 *color.rgb * effect * color.rgb, 0.);
+			w += w * .7 * effect;
+			gl_FragColor.a *= (w + .4 - h)*cos(fwidth(h)*.5);
 			//gl_FragColor.a = max(gl_FragColor.a, .1);
 			//if (gl_FragColor.a < .02) discard;
 		}
@@ -229,7 +227,6 @@ const coord = [
 
 gl.useProgram(programInfo.program);
 twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
-setUniform.w0(thickness);
 
 let effectScale;
 function resize() {
