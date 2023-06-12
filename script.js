@@ -63,7 +63,7 @@ function color(htColor) {
 	}
 	return array;
 }
-const color0 = color('#7786');
+const color0 = color('#6675');
 const dark = color('#77777f17');
 const light = color('#ddec');
 
@@ -137,7 +137,7 @@ dataArray.forEach(([id, links]) => {
 
 		if (el==id || connects.some(({els: [a, b]}) => (a==el1 && b==el2) || (a==el2 && b==el1) )) return;
 
-		let effect = [300 + Math.random()*100, 300 + Math.random()*100]; // distances between glare
+		let effect = [380 + Math.random()*100, 380 + Math.random()*100]; // distances between glare
 		effect = effect.concat([Math.random()*effect[0], Math.random()*effect[1]]); // initial glare shift
 
 		connects.push({
@@ -202,7 +202,12 @@ const coord = [
 		varying vec2 ab, vCoord;
 		varying float ab2;
 
-		float pow2(float val) {return val*val;}
+		float pow2(float val) {
+			return val*val;
+		}
+		float glare(float delta) {
+			return exp(-.3-.12*delta)*(sqrt(delta)+.2);
+		}
 
 		void main() {
 			vec2 p = gl_FragCoord.xy;
@@ -213,11 +218,13 @@ const coord = [
 			 h = abs(vCoord.y);
 			//if (h > w + 2.8) discard;
 
-			float	delta =  mod(-vCoord.x + effData.z, effData.x),
-				effect = exp(-.3-.12*delta)*(sqrt(delta)+.1);
+			float
+				d1 =  mod(-vCoord.x + effData.z, effData.x),
+				d2 =  mod(vCoord.x - ab2 + effData.w, effData.y),
+				effect = glare(d1) + glare(d2);
 
-			gl_FragColor = color + vec4(.5 *color.rgb * effect * color.rgb, 0.);
-			w += w * .7 * effect;
+			gl_FragColor = color + vec4(-.8 *color.rgb * (atan(effect*20.-22.)/6.3-.75) * color.rgb, 0.);
+			w += w * .8 * effect;
 			gl_FragColor.a *= (w + .4 - h)*cos(fwidth(h)*.5);
 			//gl_FragColor.a = max(gl_FragColor.a, .1);
 			//if (gl_FragColor.a < .02) discard;
@@ -269,7 +276,7 @@ requestAnimationFrame(function render(t) {
 		el._pos = [(x - left) * devicePixelRatio, (height - y + top) * devicePixelRatio]//, .9]
 		el._highlighted = el.classList.contains('active');
 	}
-	const dc = dt*.006, dShift = dt * .03;
+	const dc = dt*.006, dShift = dt * .045;
 	connects.forEach(({els: [a, b], color, effect}) => {
 		
 		setUniform.a(a._pos);
