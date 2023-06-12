@@ -89,21 +89,43 @@ const elements = {};
 let max=0;
 for(let i=0; i<3; i++) {
 
-	orbits[i] = newEl({
+	const orb = orbits[i] = newEl({
 		className: 'orbit orbit'+i,
-		onclick: function(e){
+		onclick: e => {
 			const selected = e.target.classList.contains('selected');
 
-			coins.querySelectorAll('.orbit, .coin').forEach(el=>el.classList.remove('selected', 'active'))
-			coins.classList.remove('has-active');
+			if (e.type=='click') {
+				delete coins.querySelector('.coin.selected')?._selected;
+				coins.querySelectorAll('.orbit, .coin').forEach(el=>el.classList.remove('selected', 'active'))
+				coins.classList.remove('has-active');
+			}
 			if (selected) return;
 
-			this.classList.add('selected') ;
-			e.target.classList.add('selected', 'active') ;
+			if (e.type=='click') {
+				orb.classList.add('selected');
+				e.target.classList.add('selected');
+			}
+			e.target.classList.add('active') ;
+			e.target._selected = true;
 			coins.classList.add('has-active');
 			data[e.target.id].forEach(id => document.getElementById(id).classList.add('active'))
+		},
+		
+		onpointerout: e => {
+			const el=e.target;
+			if (!el._selected || el.classList.contains('selected')) return;
+			delete el._selected;
+			data[el.id].forEach(id => {
+				if (document.getElementById(id)._selected) return
+				if (data[id].some(id => document.getElementById(id)._selected)) return;
+				document.getElementById(id).classList.remove('active')
+			})
+			el.classList.remove('active');
+			if (!coins.querySelector('.coin.selected')) coins.classList.remove('has-active');
 		}
 	}, coins);
+
+	orb.onpointerover = orb.onclick;
 
 	if ((max+=maxCards[i])>=num) break;
 }
@@ -145,7 +167,6 @@ dataArray.forEach(([id, links]) => {
 			color: [.5, .5, .5, 0],
 			effect 
 		});
-		console.log(effect)
 	})
 })
 
@@ -268,7 +289,6 @@ requestAnimationFrame(function render(t) {
 
 	const {left, top, width, height} = canvas.getBoundingClientRect();
 	const mainColor = coins.classList.contains('has-active') ? dark : color0;
-	const selected = coins.querySelector('.coin.selected');
 
 	for (let id in elements) {
 		const el = elements[id],
@@ -282,7 +302,7 @@ requestAnimationFrame(function render(t) {
 		setUniform.a(a._pos);
 		setUniform.b(b._pos);
 
-		const targColor = (a == selected || b == selected) ? light : mainColor;
+		const targColor = (a._selected || b._selected) ? light : mainColor;
 
 		color.forEach((val, i) => {
 			color[i] += (targColor[i]-val)*dc
