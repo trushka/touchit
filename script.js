@@ -64,8 +64,9 @@ function color(htColor) {
 	return array;
 }
 const color0 = color('#6675');
-const dark = color('#77777f17');
+const dark = color('#6671');
 const light = color('#ddec');
+const light1 = color('#99a6');
 
 const coins = document.getElementById('coins');
 
@@ -110,7 +111,7 @@ for(let i=0; i<3; i++) {
 			coins.classList.add('has-active');
 			data[e.target.id].forEach(id => document.getElementById(id).classList.add('active'))
 		},
-		
+
 		onpointerout: e => {
 			const el=e.target;
 			if (!el._selected || el.classList.contains('selected')) return;
@@ -289,6 +290,8 @@ requestAnimationFrame(function render(t) {
 
 	const {left, top, width, height} = canvas.getBoundingClientRect();
 	const mainColor = coins.classList.contains('has-active') ? dark : color0;
+	const selected = coins.querySelector('.coin.selected')
+	//const lightColor = selected ? color0 : light;
 
 	for (let id in elements) {
 		const el = elements[id],
@@ -302,7 +305,8 @@ requestAnimationFrame(function render(t) {
 		setUniform.a(a._pos);
 		setUniform.b(b._pos);
 
-		const targColor = (a._selected || b._selected) ? light : mainColor;
+		let targColor = (a._selected || b._selected) ? light1 : mainColor;
+		if (a==selected || b==selected) targColor = light
 
 		color.forEach((val, i) => {
 			color[i] += (targColor[i]-val)*dc
