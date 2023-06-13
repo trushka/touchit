@@ -60,12 +60,7 @@ const canvas = newEl({tag: 'canvas'}, coins);
 //const ctx = canvas.getContext('2d');
 
 const orbits = [];
-
-let width, height;
-
 const connects=[];
-
-console.log(document.documentElement.clientWidth / 2);
 
 const dataArray = Object.entries(data),
 	num = dataArray.length; //25;
@@ -73,12 +68,15 @@ const maxCards = [8, 20, 30];
 
 const elements = {};
 
-coins.onclick = e => coins.querySelector('.coin.selected')?.click();
+canvas.onclick = e => {
+	coins.querySelector('.coin.selected')?.click();
+}
 
 let max=0;
 for(let i=0; i<3; i++) {
 
 	const orb = orbits[i] = newEl({
+
 		className: 'orbit orbit'+i,
 		onclick: e => {
 			const el0 = e.target,
@@ -88,7 +86,7 @@ for(let i=0; i<3; i++) {
 			el0.style.transitionDelay='';
 
 			if (click) {
-				e.stopPropagation();
+				if (el0==orb) return;
 
 				const els = orb.querySelectorAll('.coin'),
 					n = els.length,
