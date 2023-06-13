@@ -52,7 +52,7 @@ function color(htColor) {
 const color0 = color('#6675');
 const dark = color('#6671');
 const light = color('#ddec');
-const light1 = color('#99a6');
+const light1 = color('#aab6');
 
 const coins = document.getElementById('coins');
 
@@ -73,19 +73,33 @@ const maxCards = [8, 20, 30];
 
 const elements = {};
 
+coins.onclick = e => coins.querySelector('.coin.selected')?.click();
+
 let max=0;
 for(let i=0; i<3; i++) {
 
 	const orb = orbits[i] = newEl({
 		className: 'orbit orbit'+i,
 		onclick: e => {
-			const el0 = e.target
-			 selected = coins.querySelector('.coin.selected'),
-			 click = e.type=='click';
+			const el0 = e.target,
+			 click = e.type=='click',
+			 selected = coins.querySelector('.coin.selected');
 
 			el0.style.transitionDelay='';
 
 			if (click) {
+				e.stopPropagation();
+
+				const els = orb.querySelectorAll('.coin'),
+					n = els.length,
+					i0 = el0._i,
+					opposite = i0 + n/2;
+
+				els.forEach((el, i)=>{
+					const index = opposite + (i + 1 - (i>i0) - opposite)*n/(n - 1);
+					els[i].style.setProperty('--i', el0!=selected ? index : i);
+				})
+
 				delete selected?._selected;
 				coins.querySelectorAll('.orbit, .coin').forEach(el=>el.classList.remove('selected', 'active'))
 				coins.classList.remove('has-active');
@@ -105,7 +119,7 @@ for(let i=0; i<3; i++) {
 				el.style.transitionDelay=(click? .1+delay*.6 : delay)+'s';
 				if (data[el0.id].some(id=> id==el.id)) el.classList.add('active');
 			})
-			selected.style.transitionDelay='';
+			if (selected) selected.style.transitionDelay='';
 		},
 		onpointerout: e => {
 			const el=e.target;
@@ -145,6 +159,7 @@ for(let orb=0, start=0; orb<orbits.length; orb++) {
 		elements[id] = newEl({ id,
 			className: 'coin',
 			css: {'--i': i},
+			_i: i
 		}, orbits[orb]);
 	}
 
@@ -174,7 +189,7 @@ dataArray.forEach(([id, links]) => {
 })
 
 const gl = canvas.getContext('webgl');//, {premultipliedAlpha: false});
-twgl.addExtensionsToContext(gl);
+//twgl.addExtensionsToContext(gl);
 gl.enable(gl.BLEND);
 gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
@@ -214,8 +229,6 @@ const coord = [
 		  //vec4(mix(minab, maxab, coord)/resolution*2. - 1.;
 		}
 	`, `
-		#extension GL_OES_standard_derivatives : enable
-
 		precision mediump float;
 
 		uniform vec2 a;
@@ -254,8 +267,8 @@ const coord = [
 				effect = length(glare(d12(.0) )),
 				ef1 = length(exp(-d*d*.003));
 
-			w += w * .7 * effect;
-			float a = max(0., (w - h)*cos(fwidth(h)*.4));
+			w += w * .6 * effect;
+			float a = max(0., (w - h)*pRatio);
 			gl_FragColor = color;
 			gl_FragColor.xyz += .15 *color.rgb * effect * color.rgb*a;
 			gl_FragColor.a *= a;

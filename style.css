@@ -57,12 +57,6 @@ canvas {
 	will-change: transform;
 	/* isolation: isolate; */
 }
-.orbit.selected .coin {
-	--ro: calc(var(--i) / (var(--n) - 1) * 1turn);
-}
-.coin.selected ~ .coin {
-	--ro: calc((var(--i) - 1) / (var(--n) - 1) * 1turn);
-}
 .orbit.selected .coin.selected {
 	--r: 0;
 }
