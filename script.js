@@ -97,18 +97,23 @@ for(let i=0; i<3; i++) {
 			coins.classList.add('has-active');
 			data[e.target.id].forEach(id => document.getElementById(id).classList.add('active'))
 		},
-
 		onpointerout: e => {
 			const el=e.target;
+
 			if (!el._selected || el.classList.contains('selected')) return;
-			delete el._selected;
+			el._selected = false;
+			let isActive = false;
+
 			data[el.id].forEach(id => {
-				if (document.getElementById(id)._selected) return
-				if (data[id].some(id => document.getElementById(id)._selected)) return;
-				document.getElementById(id).classList.remove('active')
+				const el1 = document.getElementById(id);
+				isActive = isActive || el1._selected;
+				if (el1._selected) return;
+
+				if (data[id].some(id => id!=el.id && document.getElementById(id)._selected)) return;
+				el1.classList.remove('active')
 			})
-			el.classList.remove('active');
 			if (!coins.querySelector('.coin.selected')) coins.classList.remove('has-active');
+			if (!isActive) el.classList.remove('active');
 		}
 	}, coins);
 
