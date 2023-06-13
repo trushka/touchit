@@ -25,20 +25,6 @@ const data = {
 	"el12": ["el24", "el0", "el20", "el7", "el20", "el24"],
 	"el18": ["el17", "el5", "el24", "el20", "el7", "el19", "el20", "el22"],
 	"el20": ["el2", "el18", "el12", "el23", "el22", "el23"],
-	// "el25": ["el7", "el11", "el3", "el16", "el17", "el18", "el19"],
-	// "el26": ["el15", "el4", "el12", "el1", "el6", "el2", "el17", "el10", "el14", "el15", "el22", "el23", "el24"],
-	// "el27": ["el14", "el21", "el6", "el24", "el10", "el0", "el5", "el9", "el9", "el17", "el19", "el20", "el23"],
-	// "el28": ["el16", "el9", "el0", "el18", "el1", "el20", "el11", "el8", "el23"],
-	// "el29": ["el3", "el20", "el5", "el4", "el0", "el11", "el24", "el22"],
-	// "el30": ["el9", "el19", "el23"],
-	// "el31": ["el11", "el13", "el22", "el14", "el16", "el3", "el8", "el6", "el8", "el12", "el13", "el18", "el24"],
-	// "el32": ["el5", "el20", "el10", "el2", "el6", "el22", "el15", "el18", "el4"],
-	// "el33": ["el8", "el24", "el5", "el23", "el13", "el2", "el20", "el4", "el18"],
-	// "el34": ["el4", "el18", "el7", "el14", "el17", "el21", "el24"],
-	// "el35": ["el22", "el20", "el10", "el2", "el24", "el4", "el15", "el0", "el9"],
-	// "el36": ["el24", "el0", "el20", "el7", "el20", "el24"],
-	// "el37": ["el17", "el5", "el24", "el20", "el7", "el19", "el20", "el22"],
-	// "el38": ["el2", "el18", "el12", "el23", "el22", "el23"],
 }
 
 function newEl(props={}, parent) {
@@ -194,6 +180,8 @@ const coord = [
 		varying vec2 ab, vCoord;
 		varying float ab2;
 
+		const float wHalf = 25.;
+
 		void main() {
 			vec2 maxab = max(a, b)+2.;
 			vec2 minab = min(a, b)-2.;
@@ -201,8 +189,7 @@ const coord = [
 		  ab = a - b;
 		  ab2 = length(ab)/pRatio;
 
-		  float wHalf = pRatio*12.;
-		  vec2 ort = normalize(ab).yx*wHalf;
+		  vec2 ort = normalize(ab).yx*wHalf*pRatio;
 		  ort.x *= -1.;
 
 		  gl_Position.xy = ((coord.x > 0. ? a : b) + ort * coord.y) / resolution * 2. - 1.;
@@ -227,28 +214,36 @@ const coord = [
 		float pow2(float val) {
 			return val*val;
 		}
-		float glare(float delta) {
-			return exp(-.3-.12*delta)*(sqrt(delta)+.2);
+		vec2 glare(vec2 delta) {
+			return exp(-.3-.15*delta)*(sqrt(delta)+.2);
 		}
-
+		vec2 d12(float shift) {
+			return vec2(
+				mod(-vCoord.x + effData.z+shift, effData.x),
+				mod(vCoord.x - ab2 + effData.w+shift, effData.y)
+			);
+		}
 		void main() {
 			vec2 p = gl_FragCoord.xy;
 			vec2 
 				pa = a - p,
 				pb = b - p;
-			float w = .9*pRatio,
+			float w = .8 +.6/pRatio,
 			 h = abs(vCoord.y);
 			//if (h > w + 2.8) discard;
 
+			vec2 d=d12(50.)-55.;
+			//d*=d;
 			float
-				d1 =  mod(-vCoord.x + effData.z, effData.x),
-				d2 =  mod(vCoord.x - ab2 + effData.w, effData.y),
-				effect = glare(d1) + glare(d2);
+				effect = length(glare(d12(.0) )),
+				ef1 = length(exp(-d*d*.003));
 
-			gl_FragColor = color + vec4(-.8 *color.rgb * (atan(effect*20.-22.)/6.3-.75) * color.rgb, 0.);
-			w += w * .8 * effect;
-			gl_FragColor.a *= (w + .4 - h)*cos(fwidth(h)*.5);
-			//gl_FragColor.a = max(gl_FragColor.a, .1);
+			w += w * .7 * effect;
+			float a = max(0., (w - h)*cos(fwidth(h)*.4));
+			gl_FragColor = color;
+			gl_FragColor.xyz += .15 *color.rgb * effect * color.rgb*a;
+			gl_FragColor.a *= a;
+			gl_FragColor.a += .07*exp(-pow(h, 1.5)*.03+ef1*.8)*color.a*dot(color.rgb, color.rgb);
 			//if (gl_FragColor.a < .02) discard;
 		}
 	`]),
