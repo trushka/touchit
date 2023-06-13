@@ -81,6 +81,8 @@ for(let i=0; i<3; i++) {
 		onclick: e => {
 			const selected = e.target.classList.contains('selected');
 
+			e.target.style.transitionDelay='';
+
 			if (e.type=='click') {
 				delete coins.querySelector('.coin.selected')?._selected;
 				coins.querySelectorAll('.orbit, .coin').forEach(el=>el.classList.remove('selected', 'active'))
@@ -95,7 +97,11 @@ for(let i=0; i<3; i++) {
 			e.target.classList.add('active') ;
 			e.target._selected = true;
 			coins.classList.add('has-active');
-			data[e.target.id].forEach(id => document.getElementById(id).classList.add('active'))
+			data[e.target.id].forEach(id => {
+				const el=document.getElementById(id);
+				el.style.transitionDelay=Math.random()*.25+'s';
+				el.classList.add('active')
+			})
 		},
 		onpointerout: e => {
 			const el=e.target;
