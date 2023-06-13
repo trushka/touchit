@@ -28,7 +28,7 @@ const data = {
 }
 
 function newEl(props={}, parent) {
-	el=document.createElement(props.tag||'div');
+	const el=document.createElement(props.tag||'div');
 	if (props.css) for (let prop in props.css) {
 		el.style.setProperty(prop, props.css[prop])
 	}
@@ -79,29 +79,33 @@ for(let i=0; i<3; i++) {
 	const orb = orbits[i] = newEl({
 		className: 'orbit orbit'+i,
 		onclick: e => {
-			const selected = e.target.classList.contains('selected');
+			const el0 = e.target
+			 selected = coins.querySelector('.coin.selected'),
+			 click = e.type=='click';
 
-			e.target.style.transitionDelay='';
+			el0.style.transitionDelay='';
 
-			if (e.type=='click') {
-				delete coins.querySelector('.coin.selected')?._selected;
+			if (click) {
+				delete selected?._selected;
 				coins.querySelectorAll('.orbit, .coin').forEach(el=>el.classList.remove('selected', 'active'))
 				coins.classList.remove('has-active');
 			}
-			if (selected) return;
+			if (el0==selected) return;
 
-			if (e.type=='click') {
+			if (click) {
 				orb.classList.add('selected');
-				e.target.classList.add('selected');
+				el0.classList.add('selected');
 			}
-			e.target.classList.add('active') ;
-			e.target._selected = true;
+			el0.classList.add('active') ;
+			el0._selected = true;
 			coins.classList.add('has-active');
-			data[e.target.id].forEach(id => {
-				const el=document.getElementById(id);
-				el.style.transitionDelay=Math.random()*.25+'s';
-				el.classList.add('active')
+			coins.querySelectorAll('.coin').forEach(el => {
+				if (el==el0) return;
+				const delay = Math.random()*.25;
+				el.style.transitionDelay=(click? .1+delay*.6 : delay)+'s';
+				if (data[el0.id].some(id=> id==el.id)) el.classList.add('active');
 			})
+			selected.style.transitionDelay='';
 		},
 		onpointerout: e => {
 			const el=e.target;
@@ -116,6 +120,7 @@ for(let i=0; i<3; i++) {
 				if (el1._selected) return;
 
 				if (data[id].some(id => id!=el.id && document.getElementById(id)._selected)) return;
+				el1.style.transitionDelay=Math.random()*.15+'s';
 				el1.classList.remove('active')
 			})
 			if (!coins.querySelector('.coin.selected')) coins.classList.remove('has-active');
@@ -139,7 +144,7 @@ for(let orb=0, start=0; orb<orbits.length; orb++) {
 
 		elements[id] = newEl({ id,
 			className: 'coin',
-			css: {'--i': i}
+			css: {'--i': i},
 		}, orbits[orb]);
 	}
 
@@ -305,7 +310,7 @@ requestAnimationFrame(function render(t) {
 		el._pos = [(x - left) * devicePixelRatio, (height - y + top) * devicePixelRatio]//, .9]
 		el._highlighted = el.classList.contains('active');
 	}
-	const dc = dt*.006, dShift = dt * .045;
+	const dc = dt*.004, dShift = dt * .045;
 	connects.forEach(({els: [a, b], color, effect}) => {
 		
 		setUniform.a(a._pos);
