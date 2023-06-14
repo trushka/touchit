@@ -266,7 +266,7 @@ const coord = [
 				ef1 = length(exp(-d*d*.003));
 
 			w += w * .6 * effect;
-			float a = max(0., (w - h)*pRatio);
+			float a = clamp((w - h)*pRatio, 0., 2.);
 			gl_FragColor = color;
 			gl_FragColor.xyz += .15 *color.rgb * effect * color.rgb*a;
 			gl_FragColor.a *= a;
