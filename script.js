@@ -92,10 +92,12 @@ for(let i=0; i<3; i++) {
 					n = els.length,
 					i0 = el0._i,
 					opposite = i0 + n/2;
-
-				els.forEach((el, i)=>{
+				selected?.parentNode.querySelectorAll('.coin').forEach((el, i)=>{
+					el.style.setProperty('--i', i);
+				})
+				if (el0!=selected) els.forEach((el, i)=>{
 					const index = opposite + (i + 1 - (i>i0) - opposite)*n/(n - 1);
-					els[i].style.setProperty('--i', el0!=selected ? index : i);
+					el.style.setProperty('--i', index);
 				})
 
 				delete selected?._selected;
